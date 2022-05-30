@@ -5,6 +5,10 @@ import pickle
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error
 
+import mlflow
+
+mlflow.set_tracking_uri("sqlite:///mlflow.db")
+mlflow.set_experiment("experiment-tracking-homework")
 
 def load_pickle(filename: str):
     with open(filename, "rb") as f_in:
@@ -12,7 +16,7 @@ def load_pickle(filename: str):
 
 
 def run(data_path):
-
+    mlflow.sklearn.autolog()
     X_train, y_train = load_pickle(os.path.join(data_path, "train.pkl"))
     X_valid, y_valid = load_pickle(os.path.join(data_path, "valid.pkl"))
 
@@ -32,5 +36,6 @@ if __name__ == '__main__':
         help="the location where the processed NYC taxi trip data was saved."
     )
     args = parser.parse_args()
-
-    run(args.data_path)
+    
+    with mlflow.start_run():
+        run(args.data_path)

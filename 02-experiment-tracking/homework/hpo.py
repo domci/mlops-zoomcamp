@@ -10,7 +10,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error
 
 mlflow.set_tracking_uri("http://127.0.0.1:5000")
-mlflow.set_experiment("random-forest-hyperopt")
+mlflow.set_experiment("random-forest-hyperopt2")
 
 
 def load_pickle(filename):
@@ -24,13 +24,17 @@ def run(data_path, num_trials):
     X_valid, y_valid = load_pickle(os.path.join(data_path, "valid.pkl"))
 
     def objective(params):
+        with mlflow.start_run():
+            mlflow.log_param('data_path', args.data_path)
+            mlflow.log_param('max_evals', args.max_evals)
 
-        rf = RandomForestRegressor(**params)
-        rf.fit(X_train, y_train)
-        y_pred = rf.predict(X_valid)
-        rmse = mean_squared_error(y_valid, y_pred, squared=False)
+            rf = RandomForestRegressor(**params)
+            rf.fit(X_train, y_train)
+            y_pred = rf.predict(X_valid)
+            rmse = mean_squared_error(y_valid, y_pred, squared=False)
+            mlflow.log_metric("rmse", rmse)
 
-        return {'loss': rmse, 'status': STATUS_OK}
+            return {'loss': rmse, 'status': STATUS_OK}
 
     search_space = {
         'max_depth': scope.int(hp.quniform('max_depth', 1, 20, 1)),
